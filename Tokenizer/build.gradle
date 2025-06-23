@@ -1,0 +1,65 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    namespace 'com.mobilerpgpack.tokenizer'
+    compileSdkVersion versions.target_sdk
+
+    defaultConfig {
+        minSdk versions.min_sdk
+        targetSdk versions.target_sdk
+
+        ndk {
+            abiFilters = []
+            abiFilters.addAll(abi_filters)
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_PLATFORM=android-$versions.native_android_platform_version",
+                        "-DCMAKE_CXX_FLAGS=-O3 -flto=thin -Wno-pointer-sign -Wno-error=unused-but-set-variable -Wno-writable-strings -w -fmax-errors=5",
+                        "-DCMAKE_C_FLAGS=-O3 -flto=thin -Wno-pointer-sign -Wno-error=unused-but-set-variable -Wno-writable-strings -w -fmax-errors=5",
+                        "-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -Wl,-plugin-opt=-emulated-tls -fuse-ld=lld -Wl,--build-id=none",
+                        "-DBUILD_SHARED_LIBS=true",
+                        "-DANDROID_STL=c++_static"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+            version versions.cmake_version
+        }
+    }
+    buildToolsVersion versions.build_tools_version
+    ndkVersion versions.ndk_version
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    packagingOptions {
+        exclude "**/libicui18n.so"
+        exclude "**/libicuuc.so"
+        exclude "**/libicudata.so"
+    }
+}
+
+preBuild.dependsOn ':icu4c:build'
+
+dependencies {
+    implementation (project(":icu4c"))
+    implementation libs.androidx.appcompat
+    implementation libs.material
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+}

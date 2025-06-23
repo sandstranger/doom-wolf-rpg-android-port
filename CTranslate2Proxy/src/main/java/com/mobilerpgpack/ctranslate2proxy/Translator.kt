@@ -12,6 +12,10 @@ abstract class Translator {
 
     private companion object{
         init {
+            System.loadLibrary("icudata")
+            System.loadLibrary("icuuc")
+            System.loadLibrary("icui18n")
+            System.loadLibrary("OpenNMTTokenizer")
             System.loadLibrary("omp")
             System.loadLibrary("spdlogd")
             System.loadLibrary("ctranslate2")

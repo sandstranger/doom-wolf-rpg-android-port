@@ -1,10 +1,9 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.jetbrains.kotlin.android)
 }
 
 android {
-    namespace 'com.mobilerpgpack.ctranslate2proxy'
+    namespace 'com.mobilerpgpack.icu4c'
     compileSdkVersion versions.target_sdk
 
     defaultConfig {
@@ -21,17 +20,15 @@ android {
                 arguments += build_flags.compiling_arguments
                 arguments += build_flags.none_build_id_flag
                 cFlags  = build_flags.common_c_flags
-                cppFlags = build_flags.common_cpp_flags
+                cppFlags = ["-O3" ,"-fexceptions" ,"-frtti"]
             }
         }
     }
-
     externalNativeBuild {
         ndkBuild {
-            path 'src/main/jni/Android.mk'
+            path 'src/main/jni/icu4c_android/Android.mk'
         }
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -42,19 +39,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = '11'
-    }
     buildToolsVersion versions.build_tools_version
     ndkVersion versions.ndk_version
 }
-preBuild.dependsOn ':CTranslate2:build',':Tokenizer:build', ':sentencepiece:build'
 
 dependencies {
-    implementation (project(":CTranslate2"))
-    implementation (project(":Tokenizer"))
-    implementation (project(":sentencepiece"))
-    implementation libs.androidx.core.ktx
+
     implementation libs.androidx.appcompat
     implementation libs.material
     testImplementation libs.junit

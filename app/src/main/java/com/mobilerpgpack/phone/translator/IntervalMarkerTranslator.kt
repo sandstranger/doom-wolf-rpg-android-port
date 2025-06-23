@@ -1,6 +1,7 @@
 package com.mobilerpgpack.phone.translator
 
 import android.util.Log
+import com.mobilerpgpack.phone.engine.EngineTypes
 
 class IntervalMarkerTranslator {
 
@@ -8,9 +9,13 @@ class IntervalMarkerTranslator {
 
     suspend fun translateWithFixedInterval(
         text: String,
+        inGame: Boolean,
+        engineType : EngineTypes,
         translateFn: suspend (String) -> String
     ): String {
-
+        if (!inGame){
+            return translateFn(text)
+        }
         var textCopy = text
 
         val markersIntervals = specialMarkers

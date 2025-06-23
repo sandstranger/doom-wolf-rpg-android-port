@@ -6,10 +6,13 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <regex>
+#include <onmt/Tokenizer.h>
 
 using namespace std;
 using namespace sentencepiece;
 using namespace ctranslate2;
+using namespace onmt;
 
 extern TranslationOptions create_translation_options();
 extern unique_ptr<Translator> create_translator (string model_path);
@@ -17,6 +20,17 @@ extern unique_ptr<Translator> create_translator (string model_path);
 static std::unique_ptr<ctranslate2::Translator> translator = nullptr;
 static std::unique_ptr<SentencePieceProcessor> sp_source = nullptr;
 static std::unique_ptr<SentencePieceProcessor> sp_target = nullptr;
+
+std::vector<std::string> split_into_sentences(const std::string& input) {
+    std::regex re(R"(([^.!?]+[.!?]))");
+    std::sregex_iterator it(input.begin(), input.end(), re), end;
+    std::vector<std::string> sentences;
+
+    for (; it != end; ++it)
+        sentences.push_back(it->str());
+
+    return sentences;
+}
 
 static std::string Translate (std::string input){
     if (input.empty()) {
@@ -28,14 +42,60 @@ static std::string Translate (std::string input){
     }
 
     try {
-        std::vector<std::string> source_tokens;
-        sp_source->Encode(input, &source_tokens);
 
-        auto results = translator->translate_batch({source_tokens},create_translation_options())[0];
+        onmt::Tokenizer::Options options;
+        options.mode = onmt::Tokenizer::Mode::Aggressive; // Режим токенизации
+        options.segment_case = true; // Включаем сегментацию по падежу (важно для предложений)
+        options.joiner_annotate = false;
+        options.segment_numbers = true;
+        options.segment_alphabet_change = true;
+        options.preserve_segmented_tokens = true;
+
+        Tokenizer tokenizer(options);
+
+        // 4. Вектор для хранения предложений.
+        std::vector<vector<std::string>> sentences;
+
+        // 5. Выполняем разбивку текста на предложения.
+        // Для этого мы "токенизируем" текст, но так как опция segment_case включена,
+        // он будет разбит на предложения.
+        vector<string> tokens_per_sentence;
+        tokenizer.tokenize(input, tokens_per_sentence, sentences);
+
+        for (const auto &item: sentences){
+            for (const auto &item1: item)
+            __android_log_print(ANDROID_LOG_INFO, "CTranslate2",
+                                "TRANSLATED VALUE = %s", item1.c_str());
+        }
+
+        return input;
+
+        /*
+        auto sentences = split_into_sentences(input);
+
+        std::vector<std::vector<std::string>> tokenized;
+        for (const auto& s : sentences) {
+            std::vector<std::string> tokens;
+            sp_source->Encode(input, &tokens);
+            tokenized.push_back(tokens);
+        }
+
+        auto results = translator->translate_batch({tokenized},create_translation_options());
         std::string output;
-        sp_target->Decode(results.output(), &output);
-        __android_log_print(ANDROID_LOG_INFO, "CTranslate2", "TRANSLATED VALUE = %s", output.c_str());
-        return output;
+        sp_target->Decode(results[0].output(), &output);
+
+
+        std::string full_output;
+        for (const auto& result : results) {
+            std::string decode;
+            sp_target->Decode(result.output(), &decode);
+            full_output += decode + " ";
+        }
+
+        full_output.pop_back();  // убрать последний пробел
+
+        __android_log_print(ANDROID_LOG_INFO, "CTranslate2", "TRANSLATED VALUE = %s", full_output.c_str());
+        return full_output;*/
     }
     catch (const std::exception& e) {
         return input;

@@ -31,3 +31,9 @@ url=https://github.com/sandstranger/CTranslate2.git
 [submodule "sentencepiece/src/main/jni/sentencepiece"]
 	path = sentencepiece/src/main/jni/sentencepiece
 	url = https://github.com/google/sentencepiece.git
+[submodule "icu4c/src/main/jni/icu4c_android"]
+	path = icu4c/src/main/jni/icu4c_android
+	url = https://github.com/sandstranger/icu4c_android.git
+[submodule "Tokenizer/src/main/jni/Tokenizer"]
+	path = Tokenizer/src/main/jni/Tokenizer
+	url = https://github.com/OpenNMT/Tokenizer.git
